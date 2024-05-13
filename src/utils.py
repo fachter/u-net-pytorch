@@ -1,17 +1,22 @@
 import torch
 import torchvision
+from PIL import Image, ImageDraw
+import torchvision.transforms.functional as F
+
+
 from src.data.carvana_dataset import CarvanaDataset
 from torch.utils.data import DataLoader
 from src.hyperparameters.hyperparams import Hyperparams
 
 
-def save_checkpoint(state, filename='checkpoint.pth.tar'):
+def save_checkpoint(state, filename='../checkpoints/checkpoint.pth.tar'):
     print("=> Saving checkpoint")
     torch.save(state, filename)
 
 
-def load_checkpoint(checkpoint, model):
-    print("=> Loading checkpoint")
+def load_checkpoint(checkpoint_filename, model):
+    print(f"=> Loading checkpoint <{checkpoint_filename}>")
+    checkpoint = torch.load(checkpoint_filename)
     model.load_state_dict(checkpoint['state_dict'])
 
 
@@ -47,7 +52,7 @@ def get_loaders(hyperparameters: Hyperparams, train_transform, validation_transf
     return train_loader, validation_loader
 
 
-def check_acc(loader, model, device="cuda"):
+def get_accuracy_and_dice_score(loader, model, device):
     num_correct = 0
     num_pixel = 0
     dice_score = 0
@@ -56,7 +61,7 @@ def check_acc(loader, model, device="cuda"):
     with torch.no_grad():
         for x, y in loader:
             x = x.to(device)
-            y = y.to(device)
+            y = y.to(device).unsqueeze(1)
             preds = torch.sigmoid(model(x))
             preds = (preds >= 0.5).float()
             num_correct += (preds == y).sum()
@@ -64,12 +69,15 @@ def check_acc(loader, model, device="cuda"):
 
             dice_score += (2 * (preds * y).sum()) / ((preds + y).sum() + 1e-8)
 
+    acc = (num_correct / num_pixel) * 100
+    final_dice = (dice_score / len(loader))
     print(
         f"{num_correct} / {num_pixel} correct pixels "
-        f"with Acc: {(num_correct / num_pixel) * 100:.2f}"
+        f"with Acc: {acc :.2f}"
     )
-    print(f"Dice Score: {(dice_score / len(loader)):.2f}")
+    print(f"Dice Score: {final_dice :.2f}")
     model.train()
+    return acc, final_dice
 
 
 def save_predictions_as_images(
@@ -85,5 +93,12 @@ def save_predictions_as_images(
             preds, f"{folder}/{idx:03d}_prediction.png"
         )
         torchvision.utils.save_image(y.unsqueeze(1), f"{folder}/{idx:03d}_ground_truth.png")
+        for input_image, mask_prediction in zip(x, preds):
+            image_with_mask = (
+                torchvision.utils.draw_segmentation_masks(
+                    input_image, mask_prediction.bool(),
+                    alpha=0.4, colors=(0, 220, 255))
+            )
+            torchvision.utils.save_image(image_with_mask, f"{folder}/{idx:03d}_masked.png")
 
     model.train()

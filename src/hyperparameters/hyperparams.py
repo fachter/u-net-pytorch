@@ -2,6 +2,7 @@ import torch
 
 
 class Hyperparams:
+
     LEARNING_RATE = 1e-4
     DEVICE = "cuda" if torch.cuda.is_available() else (
         "mps" if torch.backends.mps.is_available() else "cpu")
@@ -12,7 +13,8 @@ class Hyperparams:
     IMAGE_WIDTH = 240
     PIN_MEMORY = True
     LOAD_MODEL = True
-    TRAIN_IMG_DIR = "data/train_images/"
-    TRAIN_MASK_DIR = "data/train_masks/"
-    VAL_IMG_DIR = "data/val_images/"
-    VAL_MASK_DIR = "data/val_masks/"
+    TRAIN_MODEL = False
+    TRAIN_IMG_DIR = "../data/train/"
+    TRAIN_MASK_DIR = "../data/train_masks/"
+    VAL_IMG_DIR = "../data/validation/"
+    VAL_MASK_DIR = "../data/validation_masks/"
