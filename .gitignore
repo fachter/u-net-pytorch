@@ -269,5 +269,6 @@ data
 !data/.gitkeep
 !src/data
 saved_images
+saved_test_images
 checkpoints
 !checkpoints/.gitkeep

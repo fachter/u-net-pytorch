@@ -18,3 +18,4 @@ class Hyperparams:
     TRAIN_MASK_DIR = "../data/train_masks/"
     VAL_IMG_DIR = "../data/validation/"
     VAL_MASK_DIR = "../data/validation_masks/"
+    TEST_IMG_DIR = "../data/test/"

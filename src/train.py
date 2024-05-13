@@ -7,7 +7,7 @@ import torch.optim as optim
 from model.unet import UNet
 from src.hyperparameters.hyperparams import Hyperparams
 from src.utils import get_loaders, save_checkpoint, load_checkpoint, get_accuracy_and_dice_score, \
-    save_predictions_as_images
+    save_predictions_as_images, get_validation_transform
 
 hyperparams = Hyperparams()
 
@@ -49,15 +49,7 @@ def main():
         ToTensorV2()
     ])
 
-    val_transform = A.Compose([
-        A.Resize(height=hyperparams.IMAGE_HEIGHT, width=hyperparams.IMAGE_WIDTH),
-        A.Normalize(
-            mean=[0.0, 0.0, 0.0],
-            std=[1.0, 1.0, 1.0],
-            max_pixel_value=255.0
-        ),
-        ToTensorV2()
-    ])
+    val_transform = get_validation_transform(hyperparams)
 
     model = UNet(in_channels=3, out_channels=1).to(device=hyperparams.DEVICE)
     loss_fn = nn.BCEWithLogitsLoss().to(device=hyperparams.DEVICE)  # cross entropy loss for multi-class output
